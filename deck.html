@@ -1,0 +1,926 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Menoledge — Deck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ← → (or a clicker) to move, F for full screen, #n jumps to a slide.
+         Text is live HTML so it stays sharp at any size; phone screens are 2x exports from Figma. */
+      :root {
+        --deep: #144e5a;
+        --teal: #196c6c;
+        --sky: #9ccad6;
+        --mist: #ecf2f6;
+        --ink: #333130;
+        --grey: #66706f;
+        --paper: #fbfbfb;
+        --pink: #feb5c0;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #000;
+        overflow: hidden;
+        font-family: Roboto, system-ui, sans-serif;
+      }
+      #stage {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 1920px;
+        height: 1080px;
+        transform-origin: center;
+      }
+      .slide {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.35s ease;
+        background: var(--mist);
+        color: var(--ink);
+        overflow: hidden;
+      }
+      .slide.on {
+        opacity: 1;
+        visibility: visible;
+      }
+      .dark {
+        background: var(--deep);
+        color: #fff;
+      }
+
+      /* Type */
+      .label {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 4px;
+        color: var(--teal);
+        text-transform: uppercase;
+      }
+      .dark .label {
+        color: var(--sky);
+      }
+      h1,
+      h2 {
+        font-family: Merriweather, Georgia, serif;
+        font-weight: 900;
+        color: var(--deep);
+        margin: 0;
+      }
+      .dark h1,
+      .dark h2 {
+        color: #fff;
+      }
+      h1 {
+        font-size: 120px;
+        letter-spacing: 2px;
+      }
+      h2 {
+        font-size: 64px;
+        line-height: 1.15;
+        margin-top: 24px;
+      }
+      p.lead {
+        font-size: 28px;
+        line-height: 1.5;
+        color: var(--grey);
+        margin: 24px 0 0;
+      }
+      .dark p.lead {
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .src {
+        position: absolute;
+        left: 120px;
+        bottom: 48px;
+        font-size: 16px;
+        color: var(--grey);
+      }
+      .dark .src {
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .pad {
+        position: absolute;
+        left: 120px;
+        top: 110px;
+        right: 120px;
+      }
+
+      /* Phone frame around a 414×896 screen */
+      .phone {
+        display: block;
+        border: 10px solid #1d1d1f;
+        border-radius: 44px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 30px 60px rgba(20, 78, 90, 0.25);
+      }
+      .phone img {
+        display: block;
+        width: 100%;
+      }
+      .cap {
+        margin-top: 22px;
+        font-size: 24px;
+        line-height: 1.4;
+        color: var(--grey);
+      }
+      .cap b {
+        display: block;
+        font-family: Merriweather, Georgia, serif;
+        font-size: 28px;
+        color: var(--deep);
+        margin-bottom: 6px;
+      }
+
+      /* 1 Cover */
+      .cover .side {
+        position: absolute;
+        left: 160px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 960px;
+      }
+      .cover .tag {
+        font-family: Merriweather, Georgia, serif;
+        font-size: 40px;
+        line-height: 1.4;
+        color: var(--sky);
+        margin-top: 24px;
+      }
+      .cover .meta {
+        margin-top: 56px;
+        font-size: 24px;
+        color: rgba(255, 255, 255, 0.7);
+        line-height: 1.6;
+      }
+      .cover .phones {
+        position: absolute;
+        right: 140px;
+        top: 120px;
+        display: flex;
+        gap: 40px;
+      }
+      .cover .phones .phone {
+        width: 380px;
+      }
+      .cover .phones .phone:last-child {
+        margin-top: 120px;
+      }
+
+      /* Big numbers */
+      .stats {
+        display: flex;
+        gap: 80px;
+        margin-top: 90px;
+      }
+      .stat {
+        flex: 1;
+      }
+      .stat .n {
+        font-family: Merriweather, Georgia, serif;
+        font-weight: 900;
+        font-size: 140px;
+        line-height: 1;
+        color: var(--teal);
+      }
+      .dark .stat .n {
+        color: var(--pink);
+      }
+      .stat .t {
+        font-size: 28px;
+        line-height: 1.45;
+        margin-top: 20px;
+      }
+
+      /* Research */
+      .cols {
+        display: flex;
+        gap: 48px;
+        margin-top: 110px;
+      }
+      .card {
+        flex: 1;
+        background: #fff;
+        border-radius: 28px;
+        padding: 56px 52px;
+        min-height: 420px;
+      }
+      .card .k {
+        font-family: Merriweather, Georgia, serif;
+        font-size: 40px;
+        line-height: 1.25;
+        font-weight: 700;
+        color: var(--deep);
+      }
+      .card p {
+        font-size: 30px;
+        line-height: 1.5;
+        color: var(--grey);
+        margin: 16px 0 0;
+      }
+      .card.on {
+        background: var(--deep);
+        color: #fff;
+      }
+      .card.on .k {
+        color: #fff;
+      }
+      .card.on p {
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .card.on ul {
+        font-size: 30px;
+        line-height: 1.55;
+        padding-left: 28px;
+        margin: 18px 0 0;
+      }
+      .tagline {
+        margin-top: 12px;
+        font-size: 18px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--pink);
+        font-weight: 700;
+      }
+
+      /* Journey */
+      .journey {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-top: 80px;
+      }
+      .step {
+        padding: 22px 30px;
+        border-radius: 999px;
+        background: #fff;
+        color: var(--deep);
+        font-size: 26px;
+        font-weight: 500;
+        white-space: nowrap;
+      }
+      .arrow {
+        color: var(--sky);
+        font-size: 32px;
+      }
+      .focus {
+        display: flex;
+        gap: 18px;
+        align-items: center;
+        padding: 18px;
+        border-radius: 999px;
+        border: 3px dashed var(--teal);
+        position: relative;
+      }
+      .focus .step {
+        background: var(--teal);
+        color: #fff;
+      }
+      .focus::after {
+        content: 'ADJUST & EXPLORE — trial and error that can last months or years';
+        position: absolute;
+        left: 0;
+        top: 100%;
+        margin-top: 16px;
+        font-size: 18px;
+        letter-spacing: 2px;
+        font-weight: 700;
+        color: var(--teal);
+        white-space: nowrap;
+      }
+      .hmw {
+        margin-top: 150px;
+        font-family: Merriweather, Georgia, serif;
+        font-size: 52px;
+        line-height: 1.4;
+        color: var(--deep);
+        max-width: 1560px;
+      }
+      .hmw em {
+        font-style: normal;
+        background: linear-gradient(transparent 62%, var(--pink) 62%);
+      }
+
+      /* Values */
+      .values {
+        display: flex;
+        gap: 48px;
+        margin-top: 80px;
+      }
+      .value {
+        flex: 1;
+        border-top: 6px solid var(--sky);
+        padding-top: 36px;
+      }
+      .value .l {
+        font-family: Merriweather, Georgia, serif;
+        font-weight: 900;
+        font-size: 120px;
+        line-height: 1;
+        color: var(--pink);
+      }
+      .value .h {
+        font-family: Merriweather, Georgia, serif;
+        font-size: 36px;
+        font-weight: 700;
+        margin-top: 20px;
+      }
+      .value p {
+        font-size: 26px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.85);
+        margin: 16px 0 0;
+      }
+
+      /* Testing */
+      .test .wf {
+        position: absolute;
+        left: 120px;
+        top: 430px;
+        display: flex;
+        gap: 22px;
+      }
+      .test .wf .phone {
+        width: 230px;
+        border-width: 6px;
+        border-radius: 26px;
+        box-shadow: none;
+        filter: grayscale(1);
+      }
+      .test .wf .phone:nth-child(even) {
+        margin-top: 60px;
+      }
+      .changes {
+        position: absolute;
+        right: 120px;
+        top: 110px;
+        width: 760px;
+      }
+      .change {
+        background: #fff;
+        border-radius: 24px;
+        padding: 30px 36px;
+        margin-bottom: 22px;
+      }
+      .change .q {
+        font-size: 22px;
+        color: var(--grey);
+        line-height: 1.45;
+        font-style: italic;
+      }
+      .change .a {
+        font-size: 26px;
+        line-height: 1.4;
+        color: var(--deep);
+        font-weight: 700;
+        margin-top: 12px;
+      }
+      .change .a::before {
+        content: '→ ';
+        color: var(--teal);
+      }
+      .test .side {
+        position: absolute;
+        left: 120px;
+        top: 110px;
+        width: 900px;
+      }
+
+      /* Solution — four screens */
+      .row {
+        position: absolute;
+        left: 120px;
+        right: 120px;
+        top: 300px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .row > div {
+        width: 360px;
+      }
+
+      /* Scenario */
+      .story {
+        position: absolute;
+        left: 120px;
+        right: 120px;
+        top: 290px;
+        display: flex;
+        gap: 56px;
+        align-items: flex-start;
+      }
+      .story > div {
+        flex: 1;
+        display: flex;
+        gap: 28px;
+        align-items: flex-start;
+      }
+      .story .phone {
+        width: 300px;
+        flex: none;
+      }
+      .story .num {
+        font-family: Merriweather, Georgia, serif;
+        font-weight: 900;
+        font-size: 64px;
+        color: var(--pink);
+        line-height: 1;
+      }
+      .story .cap {
+        margin-top: 10px;
+      }
+
+      /* Design system */
+      .ds {
+        position: absolute;
+        left: 120px;
+        top: 380px;
+        display: flex;
+        gap: 90px;
+      }
+      .sw {
+        display: flex;
+        gap: 18px;
+        flex-wrap: wrap;
+        width: 760px;
+      }
+      .sw div {
+        width: 170px;
+      }
+      .sw i {
+        display: block;
+        height: 120px;
+        border-radius: 20px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+      }
+      .sw span {
+        display: block;
+        font-size: 18px;
+        color: var(--grey);
+        margin-top: 10px;
+      }
+      .sw b {
+        display: block;
+        font-size: 20px;
+        color: var(--ink);
+        margin-top: 4px;
+        font-weight: 500;
+      }
+      .type .big {
+        font-family: Merriweather, Georgia, serif;
+        font-weight: 900;
+        font-size: 120px;
+        color: var(--deep);
+        line-height: 1;
+      }
+      .type .row2 {
+        font-size: 24px;
+        color: var(--grey);
+        margin-top: 14px;
+        line-height: 1.5;
+      }
+      .type .rob {
+        font-size: 120px;
+        line-height: 1;
+        color: var(--teal);
+        margin-top: 60px;
+      }
+      .ds .phone {
+        width: 300px;
+        margin-top: -60px;
+      }
+
+      /* Result */
+      .quotes {
+        display: flex;
+        gap: 40px;
+        margin-top: 60px;
+      }
+      .quote {
+        flex: 1;
+        background: #fff;
+        border-radius: 28px;
+        padding: 48px;
+        font-family: Merriweather, Georgia, serif;
+        font-size: 32px;
+        line-height: 1.5;
+        color: var(--deep);
+      }
+      .quote::before {
+        content: '“';
+        display: block;
+        font-size: 90px;
+        line-height: 0.6;
+        color: var(--pink);
+        font-weight: 900;
+      }
+      .next {
+        margin-top: 80px;
+        display: flex;
+        gap: 40px;
+      }
+      .next div {
+        flex: 1;
+        font-size: 26px;
+        line-height: 1.5;
+        color: var(--ink);
+        border-left: 5px solid var(--sky);
+        padding-left: 24px;
+      }
+      .next b {
+        display: block;
+        color: var(--deep);
+        font-size: 22px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+
+      /* Controls: a thin progress line, slide count, Back / Next that fade until the mouse moves */
+      #bar {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        height: 3px;
+        background: var(--pink);
+        transition: width 0.3s ease;
+        z-index: 10;
+      }
+      #count {
+        position: fixed;
+        left: 16px;
+        bottom: 10px;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 13px;
+        z-index: 10;
+        mix-blend-mode: difference;
+      }
+      .nav {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        width: 8%;
+        z-index: 5;
+        cursor: pointer;
+      }
+      #prev {
+        left: 0;
+      }
+      #next {
+        right: 0;
+      }
+      #ctl {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        z-index: 11;
+        display: flex;
+        gap: 8px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      #ctl.on,
+      #ctl:hover {
+        opacity: 1;
+      }
+      #ctl button {
+        padding: 8px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 999px;
+        background: rgba(20, 78, 90, 0.75);
+        color: #fff;
+        font:
+          500 14px Roboto,
+          system-ui,
+          sans-serif;
+        cursor: pointer;
+      }
+      #ctl button:hover {
+        background: rgba(20, 78, 90, 0.95);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage">
+      <!-- 1 Cover -->
+      <section class="slide dark cover">
+        <div class="side">
+          <div class="label">Bachelor thesis · 2023</div>
+          <h1>Menoledge</h1>
+          <div class="tag">Cultivate your menopause<br />experience into wisdom.</div>
+          <div class="meta">
+            A menopause health app<br />
+            Industrial Design, KMUTT · Wittawin Archanuparb (Ohm)
+          </div>
+        </div>
+        <div class="phones">
+          <span class="phone"><img src="img/s-home.jpg" alt="Home screen" /></span>
+          <span class="phone"><img src="img/s-myplan.jpg" alt="My plan screen" /></span>
+        </div>
+      </section>
+
+      <!-- 2 Where it started -->
+      <section class="slide">
+        <div class="pad">
+          <div class="label">01 · Where it started</div>
+          <h2>It started with people close to me.</h2>
+          <p class="lead">I watched my mom and relatives in their middle age struggle with menopause.</p>
+          <div class="stats">
+            <div class="stat">
+              <div class="n">10.5M</div>
+              <div class="t">Thai women aged 40–59,<br />31% of all women in Thailand</div>
+            </div>
+            <div class="stat">
+              <div class="n">78.7%</div>
+              <div class="t">of Thai peri- and postmenopausal women<br />have at least one symptom</div>
+            </div>
+            <div class="stat">
+              <div class="n">70%+</div>
+              <div class="t">have emotional distress or muscle and joint pain,<br />the most common symptoms</div>
+            </div>
+          </div>
+        </div>
+        <div class="src">
+          Sources: Thai civil registration statistics, Apr 2023 · Panichkul et al., Asian Biomedicine 11(3), 2017 — multicenter study
+        </div>
+      </section>
+
+      <!-- 3 Understand -->
+      <section class="slide">
+        <div class="pad">
+          <div class="label">02 · Understand</div>
+          <h2>10 interviews. Three ways of facing it.</h2>
+          <p class="lead">3 perimenopause · 5 postmenopause · 2 surgical — one hour each, plus 4 existing apps. Symptoms differ for every woman, so I looked at how they cope.</p>
+          <div class="cols" style="margin-top: 70px">
+            <div class="card">
+              <div class="k">The endurer</div>
+              <p>"It's natural — just let it pass."</p>
+            </div>
+            <div class="card">
+              <div class="k">The pre-preparer</div>
+              <p>Already looked after her health before menopause, often with a doctor.</p>
+            </div>
+            <div class="card on" style="flex: 1.6">
+              <div class="k">The self-explorer</div>
+              <div class="tagline">Target user</div>
+              <ul>
+                <li>Searches, asks and watches herself to find what works</li>
+                <li>Prefers lifestyle change before medicine</li>
+                <li>Keeps her own notes of what helps and what triggers symptoms</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4 Define -->
+      <section class="slide">
+        <div class="pad">
+          <div class="label">03 · Define</div>
+          <h2>The hard part is the trial and error.</h2>
+          <div class="journey">
+            <span class="step">Unexpected symptoms</span><span class="arrow">→</span>
+            <span class="step">Realize menopause</span><span class="arrow">→</span>
+            <span class="focus"
+              ><span class="step">Seek info / support</span><span class="arrow" style="color: #fff">⇄</span
+              ><span class="step">Adapt / treat</span></span
+            ><span class="arrow">→</span>
+            <span class="step">Accept</span><span class="arrow">→</span>
+            <span class="step">Renew</span>
+          </div>
+          <div class="hmw">
+            How might we create an <em>empowering, personalized</em> tool for women who want to adjust and explore their
+            unpredictable changes — with a sense of <em>independence and control</em>?
+          </div>
+        </div>
+      </section>
+
+      <!-- 5 Concept -->
+      <section class="slide dark">
+        <div class="pad">
+          <div class="label">04 · Ideate</div>
+          <h2>A sandbox to try plans, not a rulebook.</h2>
+          <div class="values">
+            <div class="value">
+              <div class="l">S</div>
+              <div class="h">Self-independence</div>
+              <p>Choices to adapt through behavior changes and experiments, not only medicine.</p>
+            </div>
+            <div class="value">
+              <div class="l">H</div>
+              <div class="h">Helping hand</div>
+              <p>Baseline, personalized information as a guide — content checked with a doctor.</p>
+            </div>
+            <div class="value">
+              <div class="l">E</div>
+              <div class="h">Empowerment</div>
+              <p>She can take control of unpredictable days, in her own style of self-care.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6 Test -->
+      <section class="slide test">
+        <div class="side">
+          <div class="label">05 · Prototype &amp; test</div>
+          <h2>Tested the wireframe with 5 women and a doctor.</h2>
+        </div>
+        <div class="wf">
+          <span class="phone"><img src="img/w-02.jpg" alt="Wireframe: journal" /></span>
+          <span class="phone"><img src="img/w-03.jpg" alt="Wireframe: my solution" /></span>
+          <span class="phone"><img src="img/w-04.jpg" alt="Wireframe: profile insights" /></span>
+        </div>
+        <div class="changes">
+          <div class="change">
+            <div class="q">"Calendar plus journal is too much — I don't know where to look. Keep logging quick."</div>
+            <div class="a">Journal now fits on one screen</div>
+          </div>
+          <div class="change">
+            <div class="q">"I want to see whether my plan is working, not charts of my style."</div>
+            <div class="a">New Symptom record compares plans</div>
+          </div>
+          <div class="change">
+            <div class="q">"Getting a suggestion from the archive is confusing."</div>
+            <div class="a">Suggestions moved into My plan</div>
+          </div>
+          <div class="change">
+            <div class="q">Doctor: symptoms overlap across stages; triggers matter more.</div>
+            <div class="a">Dropped stage labels, added triggers</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7 Solution -->
+      <section class="slide">
+        <div class="pad">
+          <div class="label">06 · Solution</div>
+          <h2>Log it, try a plan, see if it works.</h2>
+        </div>
+        <div class="row">
+          <div>
+            <span class="phone"><img src="img/s-journal.jpg" alt="Swift journal" /></span>
+            <div class="cap"><b>Swift journal</b>Log a sudden symptom in seconds.</div>
+          </div>
+          <div>
+            <span class="phone"><img src="img/s-myplan.jpg" alt="My plan" /></span>
+            <div class="cap"><b>My plan</b>Pick a suggestion or make your own, with reminders.</div>
+          </div>
+          <div>
+            <span class="phone"><img src="img/s-record.jpg" alt="Symptom record" /></span>
+            <div class="cap"><b>Symptom record</b>Compare plans against severity over time.</div>
+          </div>
+          <div>
+            <span class="phone"><img src="img/s-archive.jpg" alt="Archive" /></span>
+            <div class="cap"><b>Archive</b>Knowledge plus recipes and reviews from other women.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8 Scenario -->
+      <section class="slide">
+        <div class="pad">
+          <div class="label">06 · Solution · scenario starring my mom</div>
+          <h2>When a plan stops working, she tries the next.</h2>
+        </div>
+        <div class="story">
+          <div>
+            <span class="phone"><img src="img/s-home.jpg" alt="Home with hot flashes logged" /></span>
+            <div>
+              <div class="num">1</div>
+              <div class="cap"><b>Hot flashes today</b>She logs it from Home.</div>
+            </div>
+          </div>
+          <div>
+            <span class="phone"><img src="img/s-plandetail.jpg" alt="Phytoestrogen plan" /></span>
+            <div>
+              <div class="num">2</div>
+              <div class="cap"><b>Tofu for breakfast</b>She picks a phytoestrogen plan and a daily reminder.</div>
+            </div>
+          </div>
+          <div>
+            <span class="phone"><img src="img/s-record.jpg" alt="Record comparing plans" /></span>
+            <div>
+              <div class="num">3</div>
+              <div class="cap"><b>A bad day → new plan</b>She switches to a stair exercise; the record compares both.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9 Result -->
+      <section class="slide">
+        <div class="pad">
+          <div class="label">07 · Result &amp; next</div>
+          <h2>What testers said, and what I'd change.</h2>
+          <div class="quotes">
+            <div class="quote">The record is really useful — my friend and I write on paper, and it's gone when we need it.</div>
+            <div class="quote">It helps me tell the doctor my symptom history when I can't cope anymore.</div>
+            <div class="quote">It follows how women in menopause turn information into their own wisdom.</div>
+          </div>
+          <div class="next">
+            <div><b>Mood</b>The palette felt too calm and cold — it can read as sad. Warmer, more relaxed.</div>
+            <div><b>Evidence</b>5 testers on a prototype. Next: more testing and long-term use.</div>
+            <div><b>Reach</b>Wearables for tracking; partners in food, fitness and well-being.</div>
+          </div>
+        </div>
+      </section>
+      <!-- Backup: design system (for Q&A) -->
+      <section class="slide">
+        <div class="pad">
+          <div class="label">Backup · Design system</div>
+          <h2>Trustworthy, with a touch of warmth.</h2>
+        </div>
+        <div class="ds">
+          <div class="sw">
+            <div><i style="background: #144e5a"></i><b>Deep slate</b><span>#144E5A · headers</span></div>
+            <div><i style="background: #196c6c"></i><b>Teal</b><span>#196C6C · actions</span></div>
+            <div><i style="background: #9ccad6"></i><b>Sky</b><span>#9CCAD6 · cards</span></div>
+            <div><i style="background: #feb5c0"></i><b>Pink</b><span>#FEB5C0 · accent</span></div>
+            <div><i style="background: #ecf2f6"></i><b>Mist</b><span>#ECF2F6</span></div>
+            <div><i style="background: #fbfbfb"></i><b>Paper</b><span>#FBFBFB</span></div>
+            <div><i style="background: #66706f"></i><b>Grey</b><span>#66706F</span></div>
+            <div><i style="background: #333130"></i><b>Ink</b><span>#333130</span></div>
+          </div>
+          <div class="type">
+            <div class="big">Aa</div>
+            <div class="row2">Merriweather — titles &amp; headlines<br />25 / 20 / 16 pt bold</div>
+            <div class="rob">Aa</div>
+            <div class="row2">Roboto — body &amp; details<br />16 / 14 pt</div>
+          </div>
+          <span class="phone"><img src="img/s-plandetail.jpg" alt="Plan detail screen" /></span>
+        </div>
+      </section>
+
+    </div>
+
+    <div class="nav" id="prev" title="Previous"></div>
+    <div class="nav" id="next" title="Next"></div>
+    <div id="bar"></div>
+    <div id="count"></div>
+    <div id="ctl" aria-label="Slide controls">
+      <button id="b-prev" type="button" title="Previous slide (←)">‹ Back</button>
+      <button id="b-next" type="button" title="Next slide (→)">Next ›</button>
+    </div>
+
+    <script>
+      const stage = document.getElementById('stage');
+      const slides = [...document.querySelectorAll('.slide')];
+      const bar = document.getElementById('bar');
+      const count = document.getElementById('count');
+      let i = Math.min(Math.max(parseInt(location.hash.slice(1), 10) - 1 || 0, 0), slides.length - 1);
+
+      const fit = () => {
+        const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+        stage.style.transform = `translate(-50%, -50%) scale(${s})`;
+      };
+
+      const show = (n) => {
+        i = Math.min(Math.max(n, 0), slides.length - 1);
+        slides.forEach((el, k) => el.classList.toggle('on', k === i));
+        bar.style.width = `${((i + 1) / slides.length) * 100}%`;
+        count.textContent = `${i + 1} / ${slides.length}`;
+        history.replaceState(null, '', `#${i + 1}`);
+      };
+
+      addEventListener('keydown', (e) => {
+        if (['ArrowRight', 'PageDown', ' '].includes(e.key)) show(i + 1);
+        else if (['ArrowLeft', 'PageUp'].includes(e.key)) show(i - 1);
+        else if (e.key === 'Home') show(0);
+        else if (e.key === 'End') show(slides.length - 1);
+        else if (e.key === 'f' || e.key === 'F')
+          document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+        else return;
+        e.preventDefault();
+      });
+      addEventListener('hashchange', () => show(parseInt(location.hash.slice(1), 10) - 1 || 0));
+
+      const ctl = document.getElementById('ctl');
+      const wake = () => {
+        ctl.classList.add('on');
+        clearTimeout(wake.t);
+        wake.t = setTimeout(() => ctl.classList.remove('on'), 2500);
+      };
+      addEventListener('mousemove', wake);
+      document.getElementById('b-prev').onclick = () => show(i - 1);
+      document.getElementById('b-next').onclick = () => show(i + 1);
+      document.getElementById('prev').onclick = () => show(i - 1);
+      document.getElementById('next').onclick = () => show(i + 1);
+      addEventListener('resize', fit);
+      fit();
+      show(i);
+    </script>
+  </body>
+</html>
